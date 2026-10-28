@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="녹조에 숯·참나무 낙엽액·볏짚 추출액을 넣었을 때 14일간 일어나는 반응을 시뮬레이션하는 가상 실험 페이지">
+<title>녹조 반응 실험실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: lab-notebook bench — settings strip, beaker bench with timeline, microscope + reaction log, chart, verdict table */
+:root{
+  --paper:#EEF1EC; --sheet:#FAFBF8; --ink:#17201B; --muted:#5C6861; --rule:#CBD3CC; --grid:#DFE5DF;
+  --algae:#2F6B3A; --algae-soft:#DCE9DA; --amber:#B07A12; --amber-soft:#F3E6C6; --dead:#8A5A3B; --blue:#2C4F9E;
+  --c-ctrl:#6B7570; --c-char:#24323F; --c-oak:#A24E25; --c-straw:#B8901A; --c-char_oak:#6F4FA3; --c-fert:#1F8A5B;
+  --cat-grow:#2F6B3A; --cat-nutr:#B07A12; --cat-stress:#C2410C; --cat-death:#7A3E2A; --cat-decomp:#6B5B3E; --cat-ads:#24323F; --cat-allelo:#8B3A62; --cat-phys:#2C6A8A;
+  --font-ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --font-data:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F1513; --sheet:#151D1A; --ink:#DDE6E0; --muted:#93A39A; --rule:#2B3833; --grid:#1B2421;
+  --algae:#6FBF7C; --algae-soft:#1D3323; --amber:#E0AA3E; --amber-soft:#3A2E14; --dead:#C48B66; --blue:#7FA0F0;
+  --c-ctrl:#9AA49F; --c-char:#9FB4C8; --c-oak:#E07A4B; --c-straw:#E2BC45; --c-char_oak:#B49AE6; --c-fert:#4CC98C;
+  --cat-grow:#6FBF7C; --cat-nutr:#E0AA3E; --cat-stress:#F07A44; --cat-death:#D08A70; --cat-decomp:#B9A57E; --cat-ads:#9FB4C8; --cat-allelo:#D982AE; --cat-phys:#6EB8DA;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#0F1513; --sheet:#151D1A; --ink:#DDE6E0; --muted:#93A39A; --rule:#2B3833; --grid:#1B2421;
+  --algae:#6FBF7C; --algae-soft:#1D3323; --amber:#E0AA3E; --amber-soft:#3A2E14; --dead:#C48B66; --blue:#7FA0F0;
+  --c-ctrl:#9AA49F; --c-char:#9FB4C8; --c-oak:#E07A4B; --c-straw:#E2BC45; --c-char_oak:#B49AE6; --c-fert:#4CC98C;
+  --cat-grow:#6FBF7C; --cat-nutr:#E0AA3E; --cat-stress:#F07A44; --cat-death:#D08A70; --cat-decomp:#B9A57E; --cat-ads:#9FB4C8; --cat-allelo:#D982AE; --cat-phys:#6EB8DA;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:0;font-weight:700;letter-spacing:-0.02em;text-wrap:balance}
+h1 .tag{font-family:var(--font-data);font-size:13px;font-weight:500;color:var(--algae);letter-spacing:0.04em;display:block;margin-bottom:6px}
+.lede{max-width:62ch;color:var(--muted);margin:6px 0 0}
+.note{font-size:12.5px;color:var(--muted);border:1px dashed var(--rule);padding:8px 12px;border-radius:6px;max-width:340px;background:var(--sheet)}
+h2{font-size:17px;margin:0;font-weight:700;letter-spacing:-0.01em}
+.sect-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.sect-h .hint{font-size:12.5px;color:var(--muted)}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:18px}
+.label{font-size:11.5px;letter-spacing:0.06em;color:var(--muted);font-weight:600;text-transform:uppercase}
+
+/* settings */
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 18px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:3px}
+.seg button{flex:1 1 auto;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;padding:6px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--sheet);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--rule)}
+.seg button:focus-visible,.chip:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--algae);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--algae)}
+.temp-row{display:flex;align-items:center;gap:10px}
+.temp-row output{font-family:var(--font-data);font-size:14px;min-width:52px;text-align:right}
+.arms-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule);align-items:center}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--rule);background:var(--paper);color:var(--muted);font:inherit;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer}
+.chip .sw{width:10px;height:10px;border-radius:50%;background:var(--sw);opacity:.35}
+.chip[aria-pressed="true"]{color:var(--ink);background:var(--sheet);border-color:var(--sw)}
+.chip[aria-pressed="true"] .sw{opacity:1}
+
+/* bench */
+.bench{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.beaker{border:1px solid var(--rule);border-radius:10px;background:var(--sheet);padding:10px 10px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit;display:flex;flex-direction:column;gap:6px;min-width:0}
+.beaker[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.beaker canvas{width:100%;aspect-ratio:4/5;display:block}
+.bk-name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:6px}
+.bk-name .sw{width:9px;height:9px;border-radius:50%;background:var(--sw)}
+.bk-sub{font-size:11.5px;color:var(--muted);margin-top:-4px}
+.bk-nums{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-family:var(--font-data);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bk-nums b{color:var(--ink);font-weight:500}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;letter-spacing:0.02em;align-self:flex-start}
+.st-grow{background:var(--algae-soft);color:var(--algae)}
+.st-flat{background:var(--paper);color:var(--muted);box-shadow:inset 0 0 0 1px var(--rule)}
+.st-yellow{background:var(--amber-soft);color:var(--amber)}
+.st-decline{background:var(--amber-soft);color:var(--amber)}
+.st-dead{background:var(--paper);color:var(--dead);box-shadow:inset 0 0 0 1px var(--dead)}
+.st-settled{background:var(--paper);color:var(--c-char);box-shadow:inset 0 0 0 1px var(--c-char)}
+
+.timeline{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.play{border:1px solid var(--ink);background:var(--ink);color:var(--sheet);font:inherit;font-weight:600;font-size:13px;border-radius:8px;padding:7px 14px;cursor:pointer;min-width:84px}
+.ghost{border:1px solid var(--rule);background:var(--sheet);color:var(--ink);font:inherit;font-size:13px;border-radius:8px;padding:7px 12px;cursor:pointer}
+.timeline .slide{flex:1 1 240px;min-width:0;display:flex;flex-direction:column}
+.ticks{display:flex;justify-content:space-between;font-family:var(--font-data);font-size:10.5px;color:var(--muted);padding:0 2px}
+.day{font-family:var(--font-data);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;min-width:110px}
+.day small{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px}
+
+/* detail grid */
+.detail{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.detail{grid-template-columns:minmax(0,1fr)}}
+.scope-wrap{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.scope{width:100%;max-width:300px;aspect-ratio:1;margin:0 auto;display:block}
+.scope-meta{font-family:var(--font-data);font-size:12px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px;border-top:1px solid var(--rule);padding-top:10px}
+.kv span:nth-child(even){font-family:var(--font-data);font-variant-numeric:tabular-nums;text-align:right}
+.kv span:nth-child(odd){color:var(--muted)}
+
+.log{display:flex;flex-direction:column;gap:0;max-height:430px;overflow:auto;border-top:1px solid var(--rule)}
+.ev{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px 6px;border:0;border-bottom:1px solid var(--rule);background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.ev:hover{background:var(--paper)}
+.ev[aria-pressed="true"]{background:var(--paper);box-shadow:inset 3px 0 0 var(--cat)}
+.ev .t{font-family:var(--font-data);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ev .nm{font-size:13.5px;font-weight:600;min-width:0}
+.cat{font-size:10.5px;font-weight:600;color:var(--cat);border:1px solid var(--cat);border-radius:4px;padding:0 6px;white-space:nowrap}
+.upcoming{font-size:12px;color:var(--muted);padding:8px 6px}
+.card{border:1px solid var(--rule);border-radius:10px;padding:16px;background:var(--paper);display:flex;flex-direction:column;gap:10px;min-width:0}
+.card h3{margin:0;font-size:16px}
+.eq{font-family:var(--font-data);font-size:13px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre;line-height:1.7}
+.card p{margin:0;max-width:68ch}
+.card .check{font-size:13px;border-top:1px dashed var(--rule);padding-top:10px}
+.card .check b{color:var(--algae)}
+.logcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:1000px){.logcols{grid-template-columns:minmax(0,1fr)}}
+
+/* chart */
+.metric-tabs{display:flex;flex-wrap:wrap;gap:4px}
+.metric-tabs button{border:1px solid var(--rule);background:var(--sheet);color:var(--muted);font:inherit;font-size:12.5px;padding:5px 10px;border-radius:6px;cursor:pointer}
+.metric-tabs button[aria-pressed="true"]{color:var(--sheet);background:var(--ink);border-color:var(--ink)}
+.chart-box{overflow-x:auto;margin-top:12px}
+.chart-box svg{display:block;width:100%;min-width:560px;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:3px;border-radius:2px;background:var(--sw)}
+.chart-note{font-size:12.5px;color:var(--muted);margin-top:6px;max-width:80ch}
+
+/* table */
+.tbl-box{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+th{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:0.03em;white-space:nowrap}
+td.num{font-family:var(--font-data);font-variant-numeric:tabular-nums;white-space:nowrap}
+.v{font-weight:700;white-space:nowrap}
+.v-good{color:var(--algae)} .v-warn{color:var(--amber)} .v-bad{color:var(--cat-stress)} .v-mute{color:var(--muted)} .v-dead{color:var(--dead)}
+td .why{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px;white-space:normal;max-width:30ch}
+.criteria{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
+.criteria div{font-size:13px;border-top:2px solid var(--rule);padding-top:8px}
+.criteria h4{margin:0 0 4px;font-size:13.5px}
+.criteria ul{margin:0;padding-left:18px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important}}
+body{margin:0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1><span class="tag">ALGAE BENCH · 14일 처리 실험</span>녹조 반응 실험실</h1>
+    <p class="lede">연못 녹조를 비커에 나누어 담고 숯, 낙엽 추출액, 볏짚 추출액을 넣었을 때 무슨 반응이 일어나는지 날짜별로 확인합니다. 비커를 누르면 현미경 사진과 반응 기록이 열립니다.</p>
+  </div>
+  <p class="note">교육용 단순 모델입니다. 수치는 실제 측정값이 아니라 반응 경향을 보여주는 예측값이며, 실제 실험으로 검증해야 합니다.</p>
+</header>
+
+<section class="panel" aria-labelledby="set-h">
+  <div class="sect-h"><h2 id="set-h">실험 조건</h2><span class="hint">조건을 바꾸면 14일 결과가 다시 계산됩니다</span></div>
+  <div class="settings">
+    <div class="field"><span class="label">조류 종류</span>
+      <div class="seg" data-key="org"><button type="button" id="org-green" data-v="green">녹조류 (클로렐라)</button><button type="button" id="org-cyano" data-v="cyano">남조류 (마이크로시스티스)</button></div></div>
+    <div class="field"><span class="label">처음 상태</span>
+      <div class="seg" data-key="init"><button type="button" id="init-h" data-v="healthy">건강한 초록</button><button type="button" id="init-y" data-v="yellow">이미 황변</button></div></div>
+    <div class="field"><span class="label">빛 조건</span>
+      <div class="seg" data-key="light"><button type="button" id="lt-roof" data-v="roof">옥상 직사광</button><button type="button" id="lt-shade" data-v="shade">반그늘</button><button type="button" id="lt-in" data-v="indoor">실내</button></div></div>
+    <div class="field"><span class="label">투입량</span>
+      <div class="seg" data-key="dose"><button type="button" id="dose-l" data-v="0.5">적게</button><button type="button" id="dose-m" data-v="1">보통</button><button type="button" id="dose-h" data-v="1.6">많이</button></div></div>
+    <div class="field"><label class="label" for="temp">수온</label>
+      <div class="temp-row"><input type="range" id="temp" min="10" max="40" step="1" value="26"><output id="tempOut" for="temp">26 °C</output></div></div>
+  </div>
+  <div class="arms-row" id="armChips"><span class="label" style="margin-right:4px">처리군</span></div>
+</section>
+
+<section class="panel" aria-labelledby="bench-h">
+  <div class="sect-h"><h2 id="bench-h">비커 관찰대</h2><span class="hint">비커를 눌러 자세히 보기</span></div>
+  <div class="bench" id="bench"></div>
+  <div class="timeline">
+    <button type="button" class="play" id="play">▶ 재생</button>
+    <button type="button" class="ghost" id="reset">0일로</button>
+    <div class="slide"><input type="range" id="tSlider" min="0" max="56" step="1" value="0" aria-label="경과 일수"><div class="ticks"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span><span>14일</span></div></div>
+    <div class="day" id="dayOut">0일 <small>경과</small></div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="det-h">
+  <div class="sect-h"><h2 id="det-h">선택한 비커 · <span id="selName"></span></h2><span class="hint" id="selSub"></span></div>
+  <div class="detail">
+    <div class="scope-wrap">
+      <div class="seg" data-key="sample"><button type="button" id="smp-w" data-v="water">물 채취</button><button type="button" id="smp-s" data-v="sed">바닥 침전물 채취</button></div>
+      <canvas class="scope" id="scope" width="600" height="600" aria-label="현미경 관찰 화면"></canvas>
+      <div class="seg" data-key="stain"><button type="button" id="st-off" data-v="off">염색 없음</button><button type="button" id="st-on" data-v="on">에반스블루 염색</button></div>
+      <div class="scope-meta" id="scopeMeta"></div>
+      <div class="kv" id="kv"></div>
+    </div>
+    <div class="logcols">
+      <div>
+        <div class="sect-h" style="margin-bottom:6px"><span class="label">반응 기록</span><span class="hint" id="logCount"></span></div>
+        <div class="log" id="log"></div>
+      </div>
+      <div class="card" id="evCard"></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="ch-h">
+  <div class="sect-h"><h2 id="ch-h">측정 그래프</h2><div class="metric-tabs" id="metricTabs"></div></div>
+  <div class="chart-box" id="chart"></div>
+  <div class="legend" id="legend"></div>
+  <p class="chart-note" id="chartNote"></p>
+</section>
+
+<section class="panel" aria-labelledby="ju-h">
+  <div class="sect-h"><h2 id="ju-h">판정표 · <span id="juDay"></span></h2><span class="hint">같은 날의 대조군과 비교 (대조군이 없으면 0일과 비교)</span></div>
+  <div class="tbl-box"><table id="judge"></table></div>
+  <div class="criteria">
+    <div><h4>정화 판정 기준</h4><ul>
+      <li>물 속 클로로필 a가 대조군보다 50% 이상, 탁도가 40% 이상 낮으면 정화됨</li>
+      <li>둘 다 25% 이상 낮으면 부분 정화</li>
+      <li>숯·침전물을 걷어낸 뒤 다시 자라지 않아야 최종 정화</li></ul></div>
+    <div><h4>사멸 판정 기준</h4><ul>
+      <li>전체 세포 중 생존 세포가 20% 미만이고 엽록소 상태가 낮으면 사멸</li>
+      <li>에반스블루로 파랗게 물드는 세포 = 막이 손상된 죽은 세포</li>
+      <li>새 배지로 옮겨도 초록색이 돌아오지 않으면 사멸 확정</li></ul></div>
+    <div><h4>헷갈리기 쉬운 경우</h4><ul>
+      <li>흡착·침강: 물은 맑지만 바닥 세포는 살아 있을 수 있음</li>
+      <li>낙엽액 갈변: 물 색이 가려져 맑아진 것처럼 보일 수 있음</li>
+      <li>사체 분해: N·P가 다시 녹아 나와 재증식 원인이 됨</li></ul></div>
+  </div>
+</section>
+</div>
+<script>
+/* ===== 녹조 반응 모델 (교육용 단순 모델) ===== */
+var ARMS = [
+  { id: 'ctrl', name: '대조군', sub: '아무것도 넣지 않음', p: {} },
+  { id: 'char', name: '숯', sub: '물리 흡착 · 응집', p: { c: 1 } },
+  { id: 'oak', name: '참나무 낙엽액', sub: '타닌 · 폴리페놀', p: { T: 1 } },
+  { id: 'straw', name: '볏짚 추출액', sub: '페놀산 · 미생물', p: { S: 1 } },
+  { id: 'char_oak', name: '숯 + 낙엽액', sub: '흡착 + 타감 병행', p: { c: 1, T: 1 } },
+  { id: 'fert', name: '영양염류 추가', sub: '액체비료 (N·P)', p: { F: 1 } }
+];
+var LIGHT = {
+  roof: { L: 1.0, uv: 0.30, label: '옥상 직사광' },
+  shade: { L: 0.65, uv: 0.06, label: '반그늘' },
+  indoor: { L: 0.35, uv: 0.0, label: '실내 창가' }
+};
+var ORG = {
+  green: { mu: 1.1, topt: 25, sens: 1.0, toxQ: 0, settleLive: 0.05, setDead: 0.25, label: '녹조류 (클로렐라 등)' },
+  cyano: { mu: 0.85, topt: 29, sens: 1.4, toxQ: 30, settleLive: 0.0, setDead: 0.32, label: '남조류 (마이크로시스티스 등)' }
+};
+var DAYS = 14, DT = 0.05, REC = 0.25;
+
+function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
+
+function simulateArm(arm, cfg) {
+  var o = ORG[cfg.org], lt = LIGHT[cfg.light], dose = cfg.dose;
+  var c = (arm.p.c || 0) * dose, T = (arm.p.T || 0) * dose, S = (arm.p.S || 0) * dose, F = (arm.p.F || 0) * dose;
+  var s;
+  if (cfg.init === 'yellow') s = { A: 0.32, Aa: 0, D: 0.18, Ds: 0.05, h: 0.38, N: 0.05, P: 0.008 };
+  else s = { A: 0.3, Aa: 0, D: 0.02, Ds: 0, h: 0.95, N: 0.8, P: 0.07 };
+  s.N += 0.12 * T + 0.05 * S + 1.5 * F;
+  s.P += 0.008 * T + 0.004 * S + 0.15 * F;
+  s.DOC = 3 + 6 * T + 4 * S;
+  s.T = T; s.Sres = S; s.Sph = 0;
+  s.tox = o.toxQ ? 0.2 + (cfg.init === 'yellow' ? 1.5 : 0) : 0;
+  s.DO = 8.3;
+  s.qN = 0; s.qP = 0; s.qO = 0; s.qT = 0; s.qTox = 0; s.att = 0; s.recN = 0;
+  var capN = 0.6 * c, capP = 0.03 * c, capO = 8 * c, capAtt = 1.0 * c;
+  var Q10 = Math.pow(1.07, cfg.temp - 20);
+  var tempf = Math.exp(-Math.pow((cfg.temp - o.topt) / 9, 2));
+  var heat = Math.max(0, cfg.temp - 33) * 0.05;
+  var frames = [], events = [], seen = {}, minA = s.A, minT = 0;
+  function ev(id, t) { if (!seen[id]) { seen[id] = 1; events.push({ id: id, t: Math.round(t * 4) / 4 }); } }
+  if (c) { ev('char_air', 0); ev('ash', 0.05); }
+  if (T) ev('tannin_release', 0);
+  if (F) ev('fert', 0);
+  var steps = Math.round(DAYS / DT), every = Math.round(REC / DT);
+  for (var i = 0; i <= steps; i++) {
+    var t = i * DT;
+    var Tcol = s.T + 0.4 * s.Sph;
+    var Leff = lt.L / (1 + 0.5 * (s.A + s.D) + 0.4 * Tcol);
+    var fN = s.N / (s.N + 0.15), fP = s.P / (s.P + 0.012), nutr = Math.min(fN, fP);
+    var inhib = clamp(o.sens * (0.75 * s.T / (s.T + 0.5) + 0.5 * s.Sph / (s.Sph + 0.6)), 0, 0.95);
+    var muE = o.mu * Leff * tempf * nutr * (0.3 + 0.7 * s.h) * (1 - inhib);
+    var growth = muE * s.A * Math.max(0, 1 - s.A / 2.5);
+    var GP = o.mu * Leff * tempf * (0.3 + 0.7 * s.h) * (1 - 0.5 * inhib) * (0.4 + 0.6 * nutr) * (s.A + 0.3 * s.Aa);
+    var sUV = lt.uv / (1 + 0.8 * (s.A + s.D) + 0.6 * Tcol);
+    var sROS = o.sens * (0.35 * s.T / (s.T + 0.5) + 0.15 * s.Sph / (s.Sph + 0.6));
+    var stress = sUV + sROS + heat;
+    var hT = clamp(Math.min(1, nutr * 1.3) - 0.9 * stress, 0, 1);
+    var kd = 0.02 + 1.2 * Math.pow(1 - s.h, 3) + 0.25 * stress;
+    var death = kd * s.A, deathA = kd * s.Aa;
+    var free = c ? Math.max(0, 1 - s.att / capAtt) : 0;
+    var kAtt = 0.9 * c * free, sticky = 0.6 + 1.2 * (1 - s.h);
+    var attL = kAtt * sticky * s.A, attD = kAtt * 1.5 * s.D;
+    var setL = o.settleLive * s.A, setD = o.setDead * s.D;
+    var bact = 1 + (c ? 0.6 : 0) + 0.8 * S;
+    var kdec = 0.12 * Q10 * bact, decD = kdec * s.D, decS = kdec * 0.6 * s.Ds, dec = decD + decS;
+    var oFree = c ? Math.max(0, 1 - s.qO / capO) : 0;
+
+    /* record */
+    if (i % every === 0) {
+      var chl = 140 * s.A * (0.15 + 0.85 * s.h);
+      var phaeo = 140 * s.D * 0.6 + 140 * s.A * (1 - s.h) * 0.3;
+      var live = s.A + s.Aa, all = live + s.D + s.Ds;
+      frames.push({
+        t: t, A: s.A, Aa: s.Aa, D: s.D, Ds: s.Ds, h: s.h, N: s.N, P: s.P, T: s.T, Sph: s.Sph, Tcol: Tcol,
+        chl: chl, R: 1 + 0.7 * chl / (chl + phaeo + 1e-6),
+        turb: 1.5 + 40 * (s.A + 0.85 * s.D) + 4 * c * Math.exp(-t * 1.2) + 1.5 * Tcol,
+        pH: clamp(7.2 + 1.5 * Math.tanh(GP / 0.8) + 0.7 * c * Math.exp(-t / 5) - 0.35 * Math.tanh(s.T) - 0.25 * Math.tanh(dec * 4), 5.5, 10.5),
+        DO: s.DO, tox: s.tox, DOC: s.DOC,
+        EC: 160 + 140 * c * (1 - Math.exp(-t * 3)) + 40 * T + 25 * S + 260 * F,
+        live: all > 0 ? live / all : 0, wlive: (s.A + s.D) > 0 ? s.A / (s.A + s.D) : 0,
+        rate: s.A > 1e-4 ? (growth - death) / s.A : 0, c: c, qN: s.qN, qP: s.qP
+      });
+    }
+
+    /* events */
+    if (s.A > 0.05 && growth / s.A > 0.22) ev('growth', t);
+    if (frames.length && frames[frames.length - 1].pH > 8.6) ev('ph_rise', t);
+    if (fN < 0.4) ev('n_limit', t);
+    if (fP < 0.4) ev('p_limit', t);
+    if (sUV > 0.12) ev('photo_uv', t);
+    if (heat > 0) ev('heat', t);
+    if (s.h < 0.6) ev('chlorosis', t);
+    var lf = (s.A + s.Aa) / (s.A + s.Aa + s.D + s.Ds);
+    if (lf < 0.5) ev('death', t);
+    if (o.toxQ && s.tox > 1) ev('lysis_toxin', t);
+    if (dec > 0.03) ev('decomp', t);
+    if (s.recN > 0.08) ev('recycle', t);
+    if (s.DO < 4) ev('low_do', t);
+    if (s.DO < 1.5) ev('anoxia', t);
+    if (o.toxQ && s.A > 0.6) ev('scum', t);
+    if (s.A < minA) { minA = s.A; minT = t; }
+    if (t - minT > 1 && s.A > minA * 1.3 && minA < 0.25 && s.A > 0.05) ev('regrowth', t);
+    if (c) {
+      if (s.qN > 0.04) ev('adsN', t);
+      if (s.qP > 0.004) ev('Pprec', t);
+      if (s.att > 0.04) ev('bridging', t);
+      if (s.qO - s.qT * 3 > 0.8) ev('orgAds', t);
+      if (s.qTox > 0.3) ev('toxAds', t);
+      if (s.att > 0.8 * capAtt || s.qN > 0.8 * capN) ev('charSat', t);
+      if (s.qT > 0.08) ev('tanninAds', t);
+    }
+    if (T) {
+      if (inhib > 0.2) ev('tannin_membrane', t);
+      if (sROS > 0.1) ev('ros_tannin', t);
+      if (Tcol > 0.4) ev('tannin_color', t);
+    }
+    if (S) {
+      if (s.Sph > 0.25) ev('straw_phenol', t);
+      if (t > 0.5) ev('straw_microbe', t);
+    }
+
+    /* update */
+    s.A += (growth - death - attL - setL) * DT;
+    s.Aa += (attL + setL - deathA) * DT;
+    s.D += (death - attD - setD - decD) * DT;
+    s.Ds += (deathA + attD + setD - decS) * DT;
+    s.att += (attL + attD) * DT;
+    s.h += (hT < s.h ? 0.45 : 0.35) * (hT - s.h) * DT;
+    var micro = 0.08 * S * s.N;
+    s.N += (-1.0 * growth + 0.7 * dec - micro) * DT;
+    s.P += (-0.08 * growth + 0.06 * dec) * DT;
+    s.recN += 0.7 * dec * DT;
+    if (c) {
+      var rN = 1.0 * c * s.N * Math.max(0, 1 - s.qN / capN); s.N -= rN * DT; s.qN += rN * DT;
+      var rP = 1.5 * c * s.P * Math.max(0, 1 - s.qP / capP); s.P -= rP * DT; s.qP += rP * DT;
+      var rO = 0.8 * c * s.DOC * oFree; s.DOC -= rO * DT; s.qO += rO * DT;
+      var rT = 0.6 * c * s.T * oFree; s.T -= rT * DT; s.qT += rT * DT; s.qO += 3 * rT * DT;
+      var rX = 1.2 * c * s.tox * oFree; s.tox -= rX * DT; s.qTox += rX * DT;
+      var rS = 0.5 * c * s.Sph * oFree; s.Sph -= rS * DT;
+    }
+    s.DOC += (2 * dec + 1.5 * (death + deathA) - 0.1 * s.DOC) * DT;
+    s.T -= 0.05 * s.T * DT;
+    var rel = 0.4 * s.Sres; s.Sres -= rel * DT; s.Sph += (rel - 0.06 * s.Sph) * DT;
+    if (o.toxQ) s.tox += (o.toxQ * 0.7 * (death + deathA) - 0.06 * s.tox) * DT;
+    s.DO += (5 * GP - 0.6 * (s.A + s.Aa) - 1.4 * dec - 0.08 * s.DOC - 0.3 * s.Sph + 1.2 * (8.3 - s.DO)) * DT;
+    s.DO = clamp(s.DO, 0, 20);
+    ['A', 'Aa', 'D', 'Ds', 'N', 'P', 'DOC', 'T', 'Sph', 'tox'].forEach(function (k) { if (s[k] < 0) s[k] = 0; });
+  }
+  events.sort(function (a, b) { return a.t - b.t; });
+  return { arm: arm, frames: frames, events: events };
+}
+
+function simulate(cfg) {
+  return cfg.arms.map(function (id) {
+    return simulateArm(ARMS.filter(function (a) { return a.id === id; })[0], cfg);
+  });
+}
+
+function statusOf(f) {
+  if (f.live < 0.2) return { k: 'dead', label: '사멸' };
+  if (f.c && f.Aa > f.A && f.A < 0.25) return { k: 'settled', label: '흡착·침강' };
+  if (f.h < 0.55) return { k: 'yellow', label: '황변' };
+  if (f.rate > 0.12) return { k: 'grow', label: '증식' };
+  if (f.rate < -0.08) return { k: 'decline', label: '쇠퇴' };
+  return { k: 'flat', label: '정체' };
+}
+if (typeof module !== 'undefined') module.exports = { simulate: simulate, statusOf: statusOf, ARMS: ARMS };
+/* ===== 반응 사전 ===== */
+var CATS = {
+  grow: '성장', nutr: '영양 결핍', stress: '스트레스', death: '사멸', decomp: '분해', ads: '흡착·침전', allelo: '타감작용', phys: '물리 변화'
+};
+var EV = {
+  growth: { cat: 'grow', name: '광합성과 세포분열', eq: '6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂   (빛, 엽록소)\nNO₃⁻ / NH₄⁺ + PO₄³⁻ → 단백질 · 핵산 · 엽록소',
+    exp: '빛과 질소·인이 충분하면 세포가 분열해 수가 늘어납니다. 물이 점점 진한 초록색이 됩니다.',
+    chk: '탁도와 클로로필 a가 하루하루 증가하는지 측정합니다. 현미경에서는 분열 중인 세포(쌍으로 붙은 세포)가 보입니다.' },
+  ph_rise: { cat: 'grow', name: '광합성에 의한 pH 상승', eq: 'HCO₃⁻ → CO₂ + OH⁻\n(조류가 CO₂를 빨아들이면 평형이 오른쪽으로 이동)',
+    exp: '낮 동안 조류가 물속 CO₂를 소모하면 탄산 평형이 이동해 OH⁻가 늘어나고 pH가 8.5 이상으로 올라갑니다.',
+    chk: '오후 2~3시에 pH를 재면 아침보다 높습니다. 이 낮-밤 차이가 크면 광합성이 활발하다는 뜻입니다.' },
+  n_limit: { cat: 'nutr', name: '질소 고갈', eq: '엽록소 a = C₅₅H₇₂O₅N₄Mg   (분자 하나에 N 4개)\n질소 공급 < 세포 요구량 → 성장 정지',
+    exp: '리비히의 최소량 법칙대로, 가장 부족한 영양분인 질소가 성장을 멈춥니다. 연못물을 퍼 와서 키우면 보통 3~5일 안에 이 단계에 도달합니다.',
+    chk: '수질 키트로 NH₄⁺와 NO₃⁻를 측정합니다. 거의 0이면 질소 고갈입니다. 비료를 조금 넣었을 때 다시 초록이 되면 확정입니다.' },
+  p_limit: { cat: 'nutr', name: '인 고갈', eq: 'ATP · DNA · 인지질 합성에 PO₄³⁻ 필요\nPO₄³⁻ 공급 부족 → 에너지 대사 저하',
+    exp: '인은 에너지(ATP)와 세포막(인지질)의 재료라서 부족하면 분열이 멈춥니다. 남조류 녹조를 줄일 때 인 관리가 특히 중요한 이유입니다.',
+    chk: '인산염 키트(몰리브덴 청 발색)로 PO₄³⁻를 측정합니다.' },
+  photo_uv: { cat: 'stress', name: '광산화 스트레스 (광표백)', eq: '³Chl* + ³O₂ → Chl + ¹O₂   (일중항 산소)\n¹O₂ + 막지질 → 지질 과산화물',
+    exp: '옥상처럼 빛과 자외선이 강하면 흡수한 빛 에너지를 다 쓰지 못해 활성산소가 생기고, 색소와 세포막이 손상됩니다. 얕은 용기일수록 심합니다.',
+    chk: '같은 물을 그늘과 직사광에 나눠 두고 색 변화 속도를 비교합니다. 직사광 쪽이 빨리 탈색되면 광표백이 원인입니다.' },
+  heat: { cat: 'stress', name: '고온 스트레스', eq: '수온 > 약 33 °C → 단백질 · 효소 변성\n광계 II(D1 단백질) 손상',
+    exp: '적정 온도를 넘으면 광합성 효소가 변성되어 성장보다 손상이 커집니다.',
+    chk: '온도계로 낮 최고 수온을 기록합니다.' },
+  chlorosis: { cat: 'nutr', name: '엽록소 분해 (황변)', eq: '엽록소 → 클로로필라이드 + 피톨   (클로로필레이스)\n클로로필라이드 − Mg²⁺ → 페오포바이드 (갈색)\n→ 무색 분해산물   (노란 카로티노이드는 남음)',
+    exp: '질소가 모자라면 세포는 엽록소를 스스로 분해해 질소를 재활용합니다. 초록 색소가 먼저 사라지고 노란 카로티노이드가 남아서 노랗게 보입니다.',
+    chk: '에탄올로 색소를 추출해 665 nm 흡광도를 재고, 묽은 염산을 넣은 뒤 다시 잽니다. 비율(산 넣기 전/후)이 1.7 근처면 건강, 1.0에 가까우면 분해된 상태입니다.' },
+  death: { cat: 'death', name: '세포 사멸', eq: '막 손상 → 선택적 투과성 상실\n에반스블루 (음이온 염료) → 손상된 막 통과 → 세포 내부 청색',
+    exp: '살아 있는 세포의 막은 염료를 막아내지만, 죽은 세포는 막이 뚫려 염료가 들어갑니다. 전체 세포의 절반 이상이 죽은 상태입니다.',
+    chk: '에반스블루(0.1%)로 5분 염색 후 현미경에서 파란 세포 비율을 셉니다. 새 배지로 옮겨 1주간 초록이 돌아오지 않으면 사멸 확정입니다.' },
+  lysis_toxin: { cat: 'death', name: '세포 용해와 독소 방출', eq: '세포 내 마이크로시스틴 → (막 파괴) → 용존 마이크로시스틴',
+    exp: '남조류가 죽으면서 세포가 터지면 안에 있던 독소가 물로 나옵니다. 세계보건기구의 먹는 물 기준은 1 μg/L입니다.',
+    chk: '학교에서는 측정이 어렵습니다. 대신 남조류 녹조 물은 맨손으로 만지지 말고 장갑을 끼세요.' },
+  scum: { cat: 'phys', name: '가스포 부력 → 수면 스컴', eq: '가스포(단백질 막 속 기체) → 세포 밀도 < 물 밀도 → 부상',
+    exp: '남조류는 가스포로 수면에 떠올라 페인트처럼 두꺼운 층을 만듭니다. 녹조류인 클로렐라에서는 보이지 않는 현상입니다.',
+    chk: '비커를 흔들지 않고 하루 두면 수면에 초록 막이 생기는지 봅니다.' },
+  decomp: { cat: 'decomp', name: '사체 분해 (호기성)', eq: '(CH₂O)ₙ + nO₂ → nCO₂ + nH₂O   (세균)',
+    exp: '죽은 조류를 세균이 분해하면서 산소를 씁니다. 이 단계부터 물에서 비린내나 퀴퀴한 냄새가 나기 시작합니다.',
+    chk: '용존산소(DO)를 측정합니다. 대조군보다 떨어지면 분해가 진행 중입니다.' },
+  recycle: { cat: 'decomp', name: '영양염류 재용출', eq: '유기질소 → NH₄⁺   (암모니아화)\n유기인 → PO₄³⁻',
+    exp: '분해된 사체에서 질소와 인이 다시 물로 나옵니다. 남은 살아 있는 세포가 이것을 먹고 다시 자랄 수 있어, 녹조가 재발하는 원인이 됩니다.',
+    chk: '조류가 죽은 뒤 며칠 지나 NH₄⁺가 다시 올라가는지 확인합니다.' },
+  low_do: { cat: 'decomp', name: '용존산소 감소', eq: '산소 소비 (분해 + 호흡) > 산소 공급 (광합성 + 대기 확산)',
+    exp: '물고기 등 대부분의 생물은 DO 4 mg/L 아래에서 스트레스를 받습니다.', chk: 'DO 측정기 또는 윙클러 적정으로 확인합니다.' },
+  anoxia: { cat: 'decomp', name: '혐기 분해와 악취', eq: 'SO₄²⁻ + 2CH₂O → H₂S + 2HCO₃⁻',
+    exp: '산소가 거의 없어지면 황산염을 쓰는 세균이 황화수소(달걀 썩는 냄새)를 만듭니다.', chk: '냄새와 바닥 침전물의 검은색 변화를 기록합니다.' },
+  regrowth: { cat: 'grow', name: '재증식', eq: '재용출된 NH₄⁺ · PO₄³⁻ + 살아남은 세포 → 다시 분열',
+    exp: '대부분 죽었어도 살아남은 일부가 재용출된 영양분으로 다시 늘어납니다. 정화가 완전하지 않았다는 신호입니다.',
+    chk: '정화 후에도 1주 이상 관찰을 이어가야 하는 이유입니다.' },
+  char_air: { cat: 'phys', name: '숯 기공의 공기 방출', eq: '기공 속 공기 ↔ 물 침투 → 기포 발생',
+    exp: '숯을 넣자마자 올라오는 기포는 반응이 아니라 미세 기공에 있던 공기가 물로 밀려 나오는 것입니다.', chk: '처음 몇 분의 기포는 정화 효과와 무관하니 기록만 해 둡니다.' },
+  ash: { cat: 'phys', name: '재 용해와 pH 상승', eq: 'CaO + H₂O → Ca²⁺ + 2OH⁻\nK₂CO₃ → 2K⁺ + CO₃²⁻',
+    exp: '숯에 남아 있는 재(칼슘·칼륨 화합물)가 녹으면서 pH와 전기전도도가 올라갑니다. 여기서 나온 Ca²⁺가 뒤의 인 침전에 쓰입니다.',
+    chk: '숯 투입 직후와 1시간 뒤 pH와 전기전도도를 잽니다. 둘 다 오르면 재 용해입니다.' },
+  adsN: { cat: 'ads', name: 'NH₄⁺ 정전기 흡착', eq: '−COOH ⇌ −COO⁻ + H⁺\n−COO⁻ + NH₄⁺ → −COO⁻···NH₄⁺',
+    exp: '숯 표면의 카르복실기가 물에서 음전하를 띠고, 양이온인 암모늄을 끌어당겨 붙잡습니다. 조류가 쓸 질소가 줄어듭니다.',
+    chk: '숯 처리군과 대조군의 NH₄⁺ 농도를 같은 날 비교합니다.' },
+  Pprec: { cat: 'ads', name: '인산칼슘 침전', eq: '3Ca²⁺ + 2PO₄³⁻ → Ca₃(PO₄)₂↓',
+    exp: '인산염은 음이온이라 숯 표면과 반발하지만, 재에서 나온 Ca²⁺와 결합해 녹지 않는 침전이 됩니다.',
+    chk: '인산염 농도가 대조군보다 빠르게 떨어지는지 확인합니다.' },
+  bridging: { cat: 'ads', name: '브리징 응집', eq: '세포 − EPS − 숯 입자 − EPS − 세포\n(반데르발스 힘 + EPS 점착)',
+    exp: '숯 입자 하나에 여러 세포가 점액질(EPS)로 붙어 덩어리가 되고 가라앉습니다. 스트레스를 받은 세포일수록 EPS가 많아 더 잘 뭉칩니다.',
+    chk: '바닥 덩어리 속에 검은 숯 알갱이가 보이면 흡착 응집입니다. 덩어리가 초록이면 살아 있는 채로 붙은 것입니다.' },
+  orgAds: { cat: 'ads', name: '유기물·냄새 물리 흡착', eq: '유기 분자 + 탄소 표면 → 반데르발스 흡착 (가역)',
+    exp: '죽은 세포에서 나온 유기물과 지오스민 같은 냄새 물질이 미세 기공에 붙습니다.', chk: '대조군과 냄새를 비교하고, 가능하면 COD 키트로 유기물량을 잽니다.' },
+  toxAds: { cat: 'ads', name: '독소 흡착', eq: '마이크로시스틴 (고리형 펩타이드) + 기공 → 흡착',
+    exp: '정수장 활성탄 공정과 같은 원리로 녹아 나온 독소를 붙잡습니다. 숯만 가진 장점입니다.', chk: '학교에서는 직접 측정이 어렵고, 문헌 근거로 설명합니다.' },
+  charSat: { cat: 'ads', name: '흡착 포화', eq: '흡착량 q → 최대 흡착량 q_max   (랑뮤어형)',
+    exp: '숯 표면의 자리가 거의 다 차서 더 이상 잘 붙지 않습니다. 숯을 교체하거나 걷어내야 할 시점입니다.', chk: '숯을 새로 넣었을 때 다시 맑아지면 포화였다는 증거입니다.' },
+  tanninAds: { cat: 'ads', name: '숯이 타닌을 흡착 (효과 상쇄)', eq: '타닌 (폴리페놀) + 탄소 표면 → 흡착',
+    exp: '숯과 낙엽액을 함께 넣으면 숯이 타닌도 붙잡아 낙엽액의 억제 효과가 일부 줄어듭니다. 두 방법이 항상 더해지지는 않습니다.',
+    chk: '낙엽액 단독, 숯 단독, 병행 처리군을 함께 비교합니다.' },
+  tannin_release: { cat: 'allelo', name: '타닌·폴리페놀 용출', eq: '가수분해성 타닌 → 갈산 + 엘라그산 + 포도당',
+    exp: '참나무 낙엽에서 타닌과 폴리페놀이 우러나옵니다. 약간의 질소·인과 유기물도 함께 들어옵니다.', chk: '추출액에 염화철(III)을 한 방울 넣어 청흑색이 되면 타닌이 있다는 증거입니다.' },
+  tannin_membrane: { cat: 'allelo', name: '타닌−막단백질 결합', eq: '타닌 −OH ··· O=C−NH− (단백질)   수소결합 → 복합체',
+    exp: '타닌의 많은 −OH가 세포막 단백질과 결합해 영양분 흡수와 효소 작용을 방해합니다. 조류를 바로 죽이기보다 성장을 멈추게 합니다.',
+    chk: '처리군이 초록을 유지하면서도 대조군처럼 늘지 않으면 성장 억제입니다.' },
+  ros_tannin: { cat: 'stress', name: '갈산 자동산화 → 활성산소', eq: '갈산 + O₂ → 퀴논 + H₂O₂',
+    exp: '갈산이 산화되며 과산화수소를 만들어 광합성 장치(광계 II)를 손상시킵니다.', chk: '처리 후 색이 서서히 옅어지는지 관찰합니다.' },
+  tannin_color: { cat: 'phys', name: '물의 갈변 (판정 주의)', eq: '타닌 · 부식질 → 400~450 nm 흡수 → 홍차색',
+    exp: '타닌이 물을 갈색으로 물들입니다. 녹조가 줄어서 색이 바뀐 것인지, 갈색에 초록이 가려진 것인지 구분해야 합니다.',
+    chk: '눈으로 색을 보지 말고 클로로필 a 추출값으로 판정합니다.' },
+  straw_phenol: { cat: 'allelo', name: '페놀산 용출', eq: '리그닌 분해 → p-쿠마르산, 페룰산',
+    exp: '볏짚이 물속에서 천천히 분해되며 페놀산이 나와 조류 효소계를 방해합니다. 효과가 느리게 나타나 예방에 가깝습니다.', chk: '볏짚 처리군은 2~3일 이후의 차이를 봅니다.' },
+  straw_microbe: { cat: 'allelo', name: '미생물과의 영양 경쟁', eq: '세균 증식 + NH₄⁺ 흡수 → 조류가 쓸 질소 감소',
+    exp: '볏짚을 분해하는 세균이 늘면서 질소를 먼저 가져가 조류의 영양분이 줄어듭니다. 대신 산소도 소비합니다.', chk: '볏짚 처리군의 DO가 대조군보다 낮은지 확인합니다.' },
+  fert: { cat: 'grow', name: '질소·인 공급', eq: 'NH₄NO₃ → NH₄⁺ + NO₃⁻\nKH₂PO₄ → K⁺ + H₂PO₄⁻',
+    exp: '부족했던 질소와 인을 채워주면 성장 한계가 풀려 폭발적으로 늘어납니다. 녹조 현상(부영양화)을 비커 안에서 재현하는 조건입니다.',
+    chk: '대조군과 비교해 클로로필 a가 몇 배 증가하는지 봅니다.' }
+};
+
+var METRICS = [
+  { k: 'chl', name: '클로로필 a', unit: 'μg/L', d: 0, note: '물 속 살아 있는 조류의 양. 정화 판정의 핵심 지표입니다.' },
+  { k: 'turb', name: '탁도', unit: 'NTU', d: 0, note: '물이 얼마나 흐린지. 살아 있는 세포와 죽은 세포를 모두 반영합니다.' },
+  { k: 'N', name: '용존 질소', unit: 'mg/L', d: 2, note: 'NH₄⁺ + NO₃⁻ 형태의 질소. 0에 가까우면 황변이 시작됩니다.' },
+  { k: 'P', name: '인산염', unit: 'mg/L', d: 3, note: 'PO₄³⁻ 형태의 인. 숯의 Ca²⁺와 침전되면 빠르게 감소합니다.' },
+  { k: 'pH', name: 'pH', unit: '', d: 1, note: '낮 시간 기준. 광합성이 활발하면 오르고, 숯의 재가 녹아도 오릅니다.' },
+  { k: 'DO', name: '용존산소', unit: 'mg/L', d: 1, note: '낮 시간 기준. 사체 분해가 진행되면 떨어집니다.' },
+  { k: 'live', name: '생존 세포율', unit: '%', d: 0, scale: 100, note: '물과 바닥을 합친 전체 세포 중 살아 있는 비율 (에반스블루 염색으로 측정).' },
+  { k: 'R', name: '산성화 비', unit: '', d: 2, note: '665 nm 흡광도, 산 넣기 전/후 비율. 1.7이면 건강한 엽록소, 1.0이면 분해된 엽록소.' },
+  { k: 'EC', name: '전기전도도', unit: 'μS/cm', d: 0, note: '물에 녹은 이온의 양. 숯의 재가 녹으면 바로 오릅니다.' },
+  { k: 'tox', name: '독소', unit: 'μg/L', d: 1, cyano: true, note: '용존 마이크로시스틴. 세포가 터지면 오르고 숯이 흡착하면 내려갑니다.' }
+];
+
+/* ===== 상태 ===== */
+var cfg = { org: 'green', init: 'healthy', light: 'roof', dose: 1, temp: 26, arms: ['ctrl', 'char', 'oak', 'straw', 'char_oak', 'fert'] };
+var ui = { frame: 0, sel: 'char', sample: 'water', stain: 'off', metric: 'chl', ev: null, playing: false };
+var results = [];
+try { var saved = JSON.parse(localStorage.getItem('algae-bench') || 'null'); if (saved) { Object.assign(cfg, saved.cfg || {}); if (saved.metric) ui.metric = saved.metric; } } catch (e) {}
+function save() { try { localStorage.setItem('algae-bench', JSON.stringify({ cfg: cfg, metric: ui.metric })); } catch (e) {} }
+
+function $(id) { return document.getElementById(id); }
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function armColorVar(id) { return 'var(--c-' + id + ')'; }
+function fmt(x, d) { return (Math.round(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d); }
+function dayStr(t) { return (t % 1 === 0 ? t.toFixed(0) : t.toFixed(2).replace(/0$/, '')) + '일'; }
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hashStr(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
+function mix(a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; }
+function rgba(c, a) { return 'rgba(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ',' + a + ')'; }
+
+var GREEN = [52, 128, 48], YELLOW = [196, 170, 58], BROWN = [128, 96, 62], PALE = [214, 206, 180], TANNIN = [140, 82, 34], WATER = [206, 224, 230];
+function algaColor(h) { return h > 0.5 ? mix(YELLOW, GREEN, (h - 0.5) / 0.5) : mix([170, 140, 70], YELLOW, h / 0.5); }
+
+/* ===== 설정 UI ===== */
+function bindSeg() {
+  document.querySelectorAll('.seg').forEach(function (seg) {
+    var key = seg.dataset.key;
+    seg.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.dataset.v;
+        if (key === 'sample' || key === 'stain') { ui[key] = v; syncSeg(); drawScope(); return; }
+        cfg[key] = key === 'dose' ? parseFloat(v) : v;
+        run();
+      });
+    });
+  });
+}
+function syncSeg() {
+  document.querySelectorAll('.seg').forEach(function (seg) {
+    var key = seg.dataset.key, cur = (key === 'sample' || key === 'stain') ? ui[key] : String(cfg[key]);
+    seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === cur)); });
+  });
+  $('temp').value = cfg.temp; $('tempOut').textContent = cfg.temp + ' °C';
+}
+function buildChips() {
+  var row = $('armChips');
+  ARMS.forEach(function (a) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.id = 'chip-' + a.id; b.style.setProperty('--sw', armColorVar(a.id));
+    b.innerHTML = '<span class="sw"></span>' + a.name;
+    b.addEventListener('click', function () {
+      var i = cfg.arms.indexOf(a.id);
+      if (i >= 0) { if (cfg.arms.length > 1) cfg.arms.splice(i, 1); }
+      else { cfg.arms.push(a.id); cfg.arms.sort(function (x, y) { return idx(x) - idx(y); }); }
+      if (cfg.arms.indexOf(ui.sel) < 0) ui.sel = cfg.arms[0];
+      run();
+    });
+    row.appendChild(b);
+  });
+}
+function idx(id) { for (var i = 0; i < ARMS.length; i++) if (ARMS[i].id === id) return i; return 0; }
+function syncChips() { ARMS.forEach(function (a) { $('chip-' + a.id).setAttribute('aria-pressed', String(cfg.arms.indexOf(a.id) >= 0)); }); }
+
+/* ===== 실행 ===== */
+function run() {
+  results = simulate(cfg);
+  syncSeg(); syncChips(); save();
+  buildBench(); buildMetricTabs();
+  render();
+}
+function cur(id) { for (var i = 0; i < results.length; i++) if (results[i].arm.id === id) return results[i]; return null; }
+
+/* ===== 비커 ===== */
+function buildBench() {
+  var bench = $('bench'); bench.innerHTML = '';
+  results.forEach(function (r) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'beaker'; b.id = 'bk-' + r.arm.id; b.style.setProperty('--sw', armColorVar(r.arm.id));
+    b.innerHTML = '<span class="bk-name"><span class="sw"></span>' + r.arm.name + '</span><span class="bk-sub">' + r.arm.sub +
+      '</span><canvas></canvas><span class="pill"></span><span class="bk-nums"></span>';
+    b.addEventListener('click', function () { ui.sel = r.arm.id; ui.ev = null; render(); });
+    bench.appendChild(b);
+  });
+}
+function drawBeaker(cv, r, f) {
+  var dpr = window.devicePixelRatio || 1, w = cv.clientWidth || 160, h = cv.clientHeight || 200;
+  if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  var x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
+  var ink = css('--muted'), rule = css('--rule');
+  var x0 = w * 0.16, x1 = w * 0.84, yTop = h * 0.08, yB = h * 0.95, yW = h * 0.2;
+  var rand = rng(hashStr(r.arm.id + cfg.org));
+  /* water */
+  x.save(); x.beginPath(); x.moveTo(x0, yW); x.lineTo(x1, yW); x.lineTo(x1, yB - 8); x.quadraticCurveTo(x1, yB, x1 - 8, yB); x.lineTo(x0 + 8, yB); x.quadraticCurveTo(x0, yB, x0, yB - 8); x.closePath(); x.clip();
+  x.fillStyle = rgba(WATER, 1); x.fillRect(x0, yW, x1 - x0, yB - yW);
+  var susp = f.A + f.D, liveC = algaColor(f.h), deadK = susp > 0 ? f.D / susp : 0;
+  var col = mix(liveC, BROWN, deadK * 0.8);
+  x.fillStyle = rgba(col, Math.min(0.92, 1 - Math.exp(-1.7 * susp))); x.fillRect(x0, yW, x1 - x0, yB - yW);
+  if (f.Tcol > 0.02) { x.fillStyle = rgba(TANNIN, Math.min(0.5, 0.45 * f.Tcol / (f.Tcol + 0.5))); x.fillRect(x0, yW, x1 - x0, yB - yW); }
+  /* suspended particles */
+  var n = Math.min(140, Math.round(70 * susp));
+  for (var i = 0; i < 140; i++) {
+    var px = x0 + 4 + rand() * (x1 - x0 - 8), py = yW + 6 + rand() * (yB - yW - 26), dead = rand() < deadK, ph = rand() * 6.28;
+    if (i >= n) continue;
+    py += Math.sin(f.t * 3 + ph) * 3;
+    x.fillStyle = rgba(dead ? BROWN : mix(liveC, [20, 50, 20], 0.35), 0.75);
+    x.beginPath(); x.arc(px, py, dead ? 1.1 : 1.5, 0, 6.28); x.fill();
+  }
+  /* scum for cyano */
+  if (cfg.org === 'cyano' && f.A > 0.15) {
+    var sh = Math.min(16, f.A * 12);
+    x.fillStyle = rgba(mix(liveC, [30, 70, 25], 0.3), 0.9); x.fillRect(x0, yW, x1 - x0, sh);
+  }
+  /* sediment */
+  var sed = f.Aa + f.Ds, sh2 = Math.min(34, 4 + sed * 26);
+  if (sed > 0.01 || f.c) {
+    var sedLive = sed > 0 ? f.Aa / sed : 0;
+    var sedCol = mix(mix(BROWN, PALE, Math.min(1, f.t / 14) * 0.6), liveC, sedLive);
+    x.fillStyle = rgba(sedCol, 0.95);
+    x.beginPath(); x.moveTo(x0, yB);
+    for (var k = 0; k <= 10; k++) { var xx = x0 + (x1 - x0) * k / 10; x.lineTo(xx, yB - sh2 + Math.sin(k * 1.7) * 2); }
+    x.lineTo(x1, yB); x.closePath(); x.fill();
+  }
+  /* charcoal pieces with clumps */
+  if (f.c) {
+    var cr = rng(99), pieces = Math.round(3 + f.c * 3);
+    for (var p = 0; p < pieces; p++) {
+      var cx = x0 + 12 + cr() * (x1 - x0 - 24), cy = yB - 8 - cr() * 10, s = 5 + cr() * 5;
+      if (f.Aa > 0.01) {
+        var cl = Math.min(10, 2 + f.Aa * 14);
+        for (var q = 0; q < 7; q++) { var a = cr() * 6.28; x.fillStyle = rgba(algaColor(f.h), 0.85); x.beginPath(); x.arc(cx + Math.cos(a) * (s + 1), cy + Math.sin(a) * (s * 0.7), cl * (0.4 + cr() * 0.4), 0, 6.28); x.fill(); }
+      }
+      x.fillStyle = '#1b1d1c'; x.beginPath();
+      for (var v = 0; v < 6; v++) { var an = v / 6 * 6.28, rr = s * (0.7 + cr() * 0.5); x[v ? 'lineTo' : 'moveTo'](cx + Math.cos(an) * rr, cy + Math.sin(an) * rr * 0.75); }
+      x.closePath(); x.fill();
+    }
+    if (f.t < 1) {
+      var br = rng(5);
+      for (var bq = 0; bq < 14; bq++) { var bx = x0 + 10 + br() * (x1 - x0 - 20), by = yB - 10 - ((br() * (yB - yW)) + f.t * 120) % (yB - yW - 10); x.strokeStyle = 'rgba(255,255,255,' + (0.8 - f.t * 0.7) + ')'; x.lineWidth = 1; x.beginPath(); x.arc(bx, by, 1.5 + br() * 1.5, 0, 6.28); x.stroke(); }
+    }
+  }
+  x.restore();
+  /* glass */
+  x.strokeStyle = ink; x.lineWidth = 1.6;
+  x.beginPath(); x.moveTo(x0 - 6, yTop); x.lineTo(x0, yTop + 6); x.lineTo(x0, yB - 8); x.quadraticCurveTo(x0, yB, x0 + 8, yB); x.lineTo(x1 - 8, yB); x.quadraticCurveTo(x1, yB, x1, yB - 8); x.lineTo(x1, yTop); x.stroke();
+  x.strokeStyle = rule; x.lineWidth = 1; x.font = '9px "IBM Plex Mono", monospace'; x.fillStyle = ink;
+  [[yW, '300'], [yW + (yB - yW) / 3, '200'], [yW + 2 * (yB - yW) / 3, '100']].forEach(function (m) { x.beginPath(); x.moveTo(x1 - 10, m[0]); x.lineTo(x1, m[0]); x.strokeStyle = ink; x.stroke(); x.fillText(m[1], x1 + 3, m[0] + 3); });
+  x.fillText('mL', x1 + 3, yTop + 6);
+}
+
+/* ===== 현미경 ===== */
+function drawScope() {
+  var r = cur(ui.sel); if (!r) return;
+  var f = r.frames[ui.frame], cv = $('scope'), x = cv.getContext('2d'), W = cv.width, R = W / 2;
+  x.clearRect(0, 0, W, W);
+  x.save(); x.beginPath(); x.arc(R, R, R - 4, 0, 6.28); x.clip();
+  var stained = ui.stain === 'on';
+  x.fillStyle = stained ? '#e9eef6' : '#f1f4e8'; x.fillRect(0, 0, W, W);
+  if (f.Tcol > 0.05 && ui.sample === 'water') { x.fillStyle = rgba(TANNIN, Math.min(0.18, 0.15 * f.Tcol)); x.fillRect(0, 0, W, W); }
+  var live, dead;
+  if (ui.sample === 'water') { live = f.A; dead = f.D; } else { live = f.Aa; dead = f.Ds; }
+  var tot = live + dead, n = Math.round(Math.min(90, 6 + tot * 70)), lf = tot > 0 ? live / tot : 0;
+  if (tot < 0.004) n = 0;
+  var rand = rng(hashStr(r.arm.id + ui.sample) + Math.floor(f.t)), cntL = 0, cntD = 0;
+  if (ui.sample === 'sed' && f.c) {
+    x.fillStyle = '#1d1f1e';
+    [[0.32, 0.4, 70], [0.7, 0.66, 55]].forEach(function (c) { x.beginPath(); for (var v = 0; v < 8; v++) { var an = v / 8 * 6.28, rr = c[2] * (0.7 + rand() * 0.4); x[v ? 'lineTo' : 'moveTo'](W * c[0] + Math.cos(an) * rr, W * c[1] + Math.sin(an) * rr); } x.closePath(); x.fill(); });
+  }
+  var lc = algaColor(f.h);
+  for (var i = 0; i < n; i++) {
+    var isLive = rand() < lf; if (isLive) cntL++; else cntD++;
+    var px, py;
+    if (ui.sample === 'sed' && f.c && rand() < 0.6) { var tgt = rand() < 0.55 ? [0.32, 0.4, 78] : [0.7, 0.66, 62], a = rand() * 6.28; px = W * tgt[0] + Math.cos(a) * tgt[2] * (0.9 + rand() * 0.3); py = W * tgt[1] + Math.sin(a) * tgt[2] * (0.9 + rand() * 0.3); }
+    else { px = 30 + rand() * (W - 60); py = 30 + rand() * (W - 60); }
+    if (cfg.org === 'cyano') drawColony(x, px, py, isLive, lc, stained, rand, f.t);
+    else drawCell(x, px, py, isLive, lc, stained, rand, f.t);
+  }
+  x.restore();
+  x.strokeStyle = css('--ink'); x.lineWidth = 6; x.beginPath(); x.arc(R, R, R - 4, 0, 6.28); x.stroke();
+  x.fillStyle = '#20302a'; x.fillRect(W - 150, W - 70, 60, 4); x.font = '22px "IBM Plex Mono", monospace'; x.fillText('10 μm', W - 160, W - 80);
+  var pct = (cntL + cntD) ? Math.round(cntD / (cntL + cntD) * 100) : 0;
+  $('scopeMeta').textContent = n === 0 ? '시야에 세포가 거의 없음 · 400배' :
+    '시야 세포 ' + (cntL + cntD) + '개 · 생존 ' + cntL + ' · 사멸 ' + cntD + (stained ? ' · 염색률 ' + pct + '%' : '') + ' · 400배';
+}
+function drawCell(x, px, py, live, lc, stained, rand, t) {
+  var r = 11 + rand() * 6;
+  if (live) {
+    x.fillStyle = rgba(mix(lc, [255, 255, 255], 0.35), 1); x.beginPath(); x.arc(px, py, r, 0, 6.28); x.fill();
+    x.fillStyle = rgba(lc, 1); x.beginPath(); x.arc(px - 2, py + 1, r * 0.78, 0.6, 5.4); x.fill();
+    x.strokeStyle = 'rgba(30,60,30,.45)'; x.lineWidth = 1.5; x.beginPath(); x.arc(px, py, r, 0, 6.28); x.stroke();
+    if (rand() < 0.15) { x.beginPath(); x.arc(px + r * 1.7, py, r * 0.8, 0, 6.28); x.fillStyle = rgba(lc, 0.85); x.fill(); }
+  } else {
+    var lysed = rand() < Math.min(0.6, t / 20);
+    var col = stained ? [44, 79, 158] : mix(PALE, BROWN, rand() * 0.5);
+    x.fillStyle = rgba(col, stained ? 0.85 : 0.75); x.beginPath();
+    for (var v = 0; v < 9; v++) { var a = v / 9 * 6.28, rr = r * (0.55 + rand() * 0.3); x[v ? 'lineTo' : 'moveTo'](px + Math.cos(a) * rr, py + Math.sin(a) * rr); }
+    x.closePath(); x.fill();
+    if (lysed) { for (var k = 0; k < 4; k++) { x.beginPath(); x.arc(px + (rand() - .5) * r * 3, py + (rand() - .5) * r * 3, 2 + rand() * 2, 0, 6.28); x.fill(); } }
+  }
+}
+function drawColony(x, px, py, live, lc, stained, rand, t) {
+  var R = 18 + rand() * 14;
+  x.fillStyle = 'rgba(200,215,190,.45)'; x.beginPath(); x.ellipse(px, py, R, R * 0.8, rand() * 3, 0, 6.28); x.fill();
+  var m = 10 + Math.floor(rand() * 14);
+  for (var i = 0; i < m; i++) {
+    var a = rand() * 6.28, d = rand() * R * 0.8, cx = px + Math.cos(a) * d, cy = py + Math.sin(a) * d * 0.8;
+    if (live) x.fillStyle = rgba(mix(lc, [20, 60, 30], 0.3), 0.95);
+    else x.fillStyle = stained ? 'rgba(44,79,158,.85)' : rgba(mix(PALE, BROWN, 0.4), 0.8);
+    x.beginPath(); x.arc(cx, cy, live ? 3.4 : 2.6, 0, 6.28); x.fill();
+  }
+}
+
+/* ===== 반응 기록 ===== */
+function renderLog() {
+  var r = cur(ui.sel), t = r.frames[ui.frame].t, log = $('log');
+  var past = r.events.filter(function (e) { return e.t <= t + 1e-9; }), fut = r.events.length - past.length;
+  if (!ui.ev || !past.some(function (e) { return e.id === ui.ev; })) ui.ev = past.length ? past[past.length - 1].id : null;
+  log.innerHTML = '';
+  past.forEach(function (e) {
+    var d = EV[e.id]; if (!d) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'ev'; b.id = 'ev-' + e.id;
+    b.style.setProperty('--cat', 'var(--cat-' + d.cat + ')');
+    b.setAttribute('aria-pressed', String(ui.ev === e.id));
+    b.innerHTML = '<span class="t">' + dayStr(e.t) + '</span><span class="nm">' + d.name + '</span><span class="cat">' + CATS[d.cat] + '</span>';
+    b.addEventListener('click', function () { ui.ev = e.id; renderLog(); });
+    log.appendChild(b);
+  });
+  if (!past.length) log.innerHTML = '<div class="upcoming">아직 기록된 반응이 없습니다. 시간을 진행해 보세요.</div>';
+  if (fut) { var u = document.createElement('div'); u.className = 'upcoming'; u.textContent = '이후 ' + fut + '개의 반응이 더 일어날 예정입니다.'; log.appendChild(u); }
+  $('logCount').textContent = past.length + '개 발생';
+  var card = $('evCard');
+  if (!ui.ev) { card.innerHTML = '<h3>반응을 선택하세요</h3><p>왼쪽 기록에서 반응을 누르면 화학식, 설명, 실제로 확인하는 방법이 나옵니다.</p>'; return; }
+  var d = EV[ui.ev], at = past.filter(function (e) { return e.id === ui.ev; })[0];
+  card.style.setProperty('--cat', 'var(--cat-' + d.cat + ')');
+  card.innerHTML = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="cat" style="--cat:var(--cat-' + d.cat + ')">' + CATS[d.cat] + '</span><span class="label">' + dayStr(at.t) + '에 시작</span></div>' +
+    '<h3>' + d.name + '</h3><div class="eq">' + d.eq + '</div><p>' + d.exp + '</p><p class="check"><b>실험에서 확인하는 법</b> · ' + d.chk + '</p>';
+}
+
+/* ===== 상세 수치 ===== */
+function renderKV() {
+  var r = cur(ui.sel), f = r.frames[ui.frame], st = statusOf(f);
+  $('selName').textContent = r.arm.name;
+  $('selSub').textContent = r.arm.sub + ' · ' + LIGHT[cfg.light].label + ' · ' + cfg.temp + ' °C';
+  var rows = [['상태', st.label], ['클로로필 a', fmt(f.chl, 0) + ' μg/L'], ['탁도', fmt(f.turb, 0) + ' NTU'], ['용존 질소', fmt(f.N, 2) + ' mg/L'], ['인산염', fmt(f.P, 3) + ' mg/L'],
+    ['pH (낮)', fmt(f.pH, 1)], ['용존산소 (낮)', fmt(f.DO, 1) + ' mg/L'], ['생존 세포율', fmt(f.live * 100, 0) + ' %'], ['산성화 비', fmt(f.R, 2)]];
+  if (cfg.org === 'cyano') rows.push(['독소', fmt(f.tox, 1) + ' μg/L']);
+  if (f.c) rows.push(['숯에 흡착된 N', fmt(f.qN, 2) + ' mg/L']);
+  $('kv').innerHTML = rows.map(function (r) { return '<span>' + r[0] + '</span><span>' + r[1] + '</span>'; }).join('');
+}
+
+/* ===== 그래프 ===== */
+function buildMetricTabs() {
+  var box = $('metricTabs'); box.innerHTML = '';
+  if (cfg.org !== 'cyano' && ui.metric === 'tox') ui.metric = 'chl';
+  METRICS.forEach(function (m) {
+    if (m.cyano && cfg.org !== 'cyano') return;
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'mt-' + m.k; b.textContent = m.name;
+    b.setAttribute('aria-pressed', String(ui.metric === m.k));
+    b.addEventListener('click', function () { ui.metric = m.k; save(); buildMetricTabs(); renderChart(); });
+    box.appendChild(b);
+  });
+}
+function niceMax(v) { if (v <= 0) return 1; var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; }
+function renderChart() {
+  var m = METRICS.filter(function (x) { return x.k === ui.metric; })[0], sc = m.scale || 1;
+  var W = 760, H = 300, L = 56, Rr = 20, T = 16, B = 34, pw = W - L - Rr, ph = H - T - B;
+  var lo = 0, hi = 0;
+  if (m.k === 'pH') { lo = 6; hi = 10; } else if (m.k === 'R') { lo = 1; hi = 1.8; }
+  else if (m.k === 'live') { hi = 100; }
+  else { results.forEach(function (r) { r.frames.forEach(function (f) { hi = Math.max(hi, f[m.k] * sc); }); }); hi = niceMax(hi * 1.05); }
+  function X(t) { return L + t / 14 * pw; } function Y(v) { return T + ph - (Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo) * ph; }
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + m.name + ' 변화 그래프">';
+  for (var g = 0; g <= 4; g++) { var v = lo + (hi - lo) * g / 4, y = Y(v); s += '<line x1="' + L + '" x2="' + (W - Rr) + '" y1="' + y + '" y2="' + y + '" stroke="var(--rule)" stroke-width="1"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">' + fmt(v, hi - lo < 5 ? 1 : 0) + '</text>'; }
+  for (var d = 0; d <= 14; d += 2) s += '<text x="' + X(d) + '" y="' + (H - 12) + '" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="var(--muted)">' + d + '일</text>';
+  if (m.unit) s += '<text x="' + L + '" y="11" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">' + m.unit + '</text>';
+  var ct = results[0].frames[ui.frame].t;
+  s += '<line x1="' + X(ct) + '" x2="' + X(ct) + '" y1="' + T + '" y2="' + (T + ph) + '" stroke="var(--ink)" stroke-width="1" stroke-dasharray="3 3"/>';
+  results.forEach(function (r) {
+    var pts = r.frames.map(function (f) { return X(f.t).toFixed(1) + ',' + Y(f[m.k] * sc).toFixed(1); }).join(' ');
+    var sel = r.arm.id === ui.sel;
+    s += '<polyline points="' + pts + '" fill="none" stroke="' + armColorVar(r.arm.id) + '" stroke-width="' + (sel ? 3 : 1.8) + '" stroke-linejoin="round" opacity="' + (sel ? 1 : 0.8) + '"/>';
+    var f = r.frames[ui.frame]; s += '<circle cx="' + X(f.t) + '" cy="' + Y(f[m.k] * sc) + '" r="' + (sel ? 4.5 : 3.2) + '" fill="' + armColorVar(r.arm.id) + '" stroke="var(--sheet)" stroke-width="1.5"/>';
+  });
+  s += '</svg>';
+  $('chart').innerHTML = s;
+  $('legend').innerHTML = results.map(function (r) { var f = r.frames[ui.frame]; return '<span style="--sw:' + armColorVar(r.arm.id) + '"><i></i>' + r.arm.name + ' <b style="font-family:var(--font-data);font-weight:500">' + fmt(f[m.k] * sc, m.d) + '</b></span>'; }).join('');
+  $('chartNote').textContent = m.note;
+}
+
+/* ===== 판정 ===== */
+function judge(r, f, ref, refIsCtrl) {
+  var out = {};
+  var chlRed = ref.chl > 1 ? 1 - f.chl / ref.chl : 0, turbRed = ref.turb > 1 ? 1 - f.turb / ref.turb : 0;
+  out.chlRed = chlRed; out.turbRed = turbRed;
+  if (refIsCtrl && r.arm.id === 'ctrl') out.purif = ['기준', 'v-mute', '비교 기준이 되는 비커'];
+  else if (chlRed >= 0.5 && turbRed >= 0.4) out.purif = ['정화됨', 'v-good', '클로로필 a와 탁도가 모두 크게 감소'];
+  else if (chlRed >= 0.25 && turbRed >= 0.25) out.purif = ['부분 정화', 'v-warn', '감소했지만 기준에는 못 미침'];
+  else if (chlRed < -0.25) out.purif = ['악화', 'v-bad', '조류가 오히려 더 많음'];
+  else out.purif = ['차이 미미', 'v-mute', '대조군과 비슷한 수준'];
+  if (out.purif[0] === '정화됨' && f.Tcol > 0.3) out.purif[2] += ' · 갈변으로 색 판정 주의';
+  if ((out.purif[0] === '정화됨' || out.purif[0] === '부분 정화') && f.Aa > 0.05 && f.Aa / (f.Aa + f.Ds) > 0.4) out.purif[2] += ' · 바닥에 살아 있는 세포 남음';
+  if (f.live < 0.2 && f.h < 0.45) out.death = ['사멸', 'v-dead', '생존 세포 ' + fmt(f.live * 100, 0) + '%, 엽록소 분해됨'];
+  else if (f.live < 0.5) out.death = ['사멸 진행', 'v-bad', '절반 이상이 죽은 세포'];
+  else if (f.h < 0.55) out.death = ['황변 (스트레스)', 'v-warn', '살아 있지만 엽록소 분해 중'];
+  else out.death = ['생존', 'v-good', '대부분 초록 세포'];
+  var pot = (f.A + f.Aa) * f.h;
+  if (pot > 0.05 && f.N > 0.2) out.regrow = ['높음', 'v-bad', '살아 있는 세포 + 남은 영양분'];
+  else if (pot > 0.05) out.regrow = ['보통', 'v-warn', '세포는 살아 있으나 영양분 부족'];
+  else if (f.N > 0.2 && pot > 0.01) out.regrow = ['보통', 'v-warn', '재용출된 영양분 있음'];
+  else out.regrow = ['낮음', 'v-good', '살아 있는 세포가 거의 없음'];
+  return out;
+}
+function pctTxt(red) { var p = Math.round(-red * 100); return (p > 0 ? '+' : '') + p + '%'; }
+function renderJudge() {
+  var ctrl = cur('ctrl'), t = results[0].frames[ui.frame].t;
+  $('juDay').textContent = dayStr(t) + ' 기준';
+  var h = '<thead><tr><th>처리군</th><th>상태</th><th>클로로필 a</th><th>탁도</th><th>질소 / 인 (mg/L)</th><th>생존 세포율</th><th>정화 판정</th><th>사멸 판정</th><th>재성장 위험</th></tr></thead><tbody>';
+  results.forEach(function (r) {
+    var f = r.frames[ui.frame], ref = ctrl ? ctrl.frames[ui.frame] : r.frames[0], j = judge(r, f, ref, !!ctrl), st = statusOf(f);
+    var isRef = ctrl && r.arm.id === 'ctrl';
+    h += '<tr><td><b style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:' + armColorVar(r.arm.id) + '"></span>' + r.arm.name + '</b></td>' +
+      '<td><span class="pill st-' + st.k + '">' + st.label + '</span></td>' +
+      '<td class="num">' + fmt(f.chl, 0) + ' μg/L' + (isRef ? '' : '<span class="why">' + pctTxt(j.chlRed) + '</span>') + '</td>' +
+      '<td class="num">' + fmt(f.turb, 0) + ' NTU' + (isRef ? '' : '<span class="why">' + pctTxt(j.turbRed) + '</span>') + '</td>' +
+      '<td class="num">' + fmt(f.N, 2) + ' / ' + fmt(f.P, 3) + '</td>' +
+      '<td class="num">' + fmt(f.live * 100, 0) + '%</td>' +
+      '<td><span class="v ' + j.purif[1] + '">' + j.purif[0] + '</span><span class="why">' + j.purif[2] + '</span></td>' +
+      '<td><span class="v ' + j.death[1] + '">' + j.death[0] + '</span><span class="why">' + j.death[2] + '</span></td>' +
+      '<td><span class="v ' + j.regrow[1] + '">' + j.regrow[0] + '</span><span class="why">' + j.regrow[2] + '</span></td></tr>';
+  });
+  $('judge').innerHTML = h + '</tbody>';
+}
+
+/* ===== 렌더 ===== */
+function render() {
+  var t = results[0].frames[ui.frame].t;
+  $('tSlider').value = ui.frame; $('dayOut').innerHTML = (t % 1 === 0 ? t : t.toFixed(2)) + '일 <small>경과</small>';
+  results.forEach(function (r) {
+    var el = $('bk-' + r.arm.id), f = r.frames[ui.frame], st = statusOf(f);
+    el.setAttribute('aria-pressed', String(r.arm.id === ui.sel));
+    drawBeaker(el.querySelector('canvas'), r, f);
+    var pill = el.querySelector('.pill'); pill.className = 'pill st-' + st.k; pill.textContent = st.label;
+    el.querySelector('.bk-nums').innerHTML = '<span>Chl <b>' + fmt(f.chl, 0) + '</b></span><span>NTU <b>' + fmt(f.turb, 0) + '</b></span><span>N <b>' + fmt(f.N, 2) + '</b></span><span>생존 <b>' + fmt(f.live * 100, 0) + '%</b></span>';
+  });
+  renderKV(); drawScope(); renderLog(); renderChart(); renderJudge();
+}
+
+/* ===== 재생 ===== */
+var timer = null;
+function setPlay(on) {
+  ui.playing = on; $('play').textContent = on ? '❚❚ 정지' : '▶ 재생';
+  clearInterval(timer);
+  if (on) { if (ui.frame >= 56) ui.frame = 0; timer = setInterval(function () { if (ui.frame >= 56) { setPlay(false); return; } ui.frame++; render(); }, 220); }
+}
+$('play').addEventListener('click', function () { setPlay(!ui.playing); });
+$('reset').addEventListener('click', function () { setPlay(false); ui.frame = 0; render(); });
+$('tSlider').addEventListener('input', function (e) { setPlay(false); ui.frame = +e.target.value; render(); });
+$('temp').addEventListener('input', function (e) { cfg.temp = +e.target.value; $('tempOut').textContent = cfg.temp + ' °C'; });
+$('temp').addEventListener('change', function () { run(); });
+window.addEventListener('resize', function () { clearTimeout(window.__rz); window.__rz = setTimeout(render, 120); });
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { render(); });
+new MutationObserver(function () { render(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+bindSeg(); buildChips();
+ui.frame = 20;
+run();
+</script>
+</body>
+</html>
