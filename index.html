@@ -300,7 +300,8 @@ details.calc summary{cursor:pointer;list-style-position:outside}
   </div>
 
   <div role="tabpanel" id="p-arms" hidden>
-    <h3>원액 정하기 <span class="lvl lvl-est">계산은 확실</span> <span class="lvl lvl-unc">녹아 나오는 비율은 추정</span></h3>
+    <div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><span class="label">투입량 입력 방식</span><div class="seg" data-key="doseMode"><button type="button" id="dm-p" data-v="pct">쉽게 (%)</button><button type="button" id="dm-ml" data-v="ml">넣는 양 (mL)</button><button type="button" id="dm-c" data-v="conc">비커 속 농도 (mg/L)</button></div><small class="hint" id="doseHint"></small></div>
+    <details class="calc" style="margin:0 0 14px;border-top:0;padding-top:0"><summary><h3 style="display:inline">원액 자세히 정하기 (선택) <span class="lvl lvl-est">계산은 확실</span> <span class="lvl lvl-unc">녹아 나오는 비율은 추정</span></h3></summary>
     <p class="hint" style="margin:4px 0 10px;max-width:90ch">추출액은 '낙엽을 얼마나 넣었는지'는 정확히 알 수 있지만, 물에 실제로 녹아 나온 양은 재 봐야 압니다. 증발 건조로 잰 값을 넣으면 추정 대신 그 값을 씁니다. 비료는 라벨의 함량으로 정확히 계산됩니다.</p>
     <div class="fgrid" style="margin-bottom:14px">
       <div class="field"><span class="label">참나무 낙엽 추출액</span>
@@ -320,10 +321,10 @@ details.calc summary{cursor:pointer;list-style-position:outside}
         <small id="fertOut"></small></div>
       <div class="field"><span class="label">활성탄 준비</span><div class="row"><label><input type="checkbox" id="rinse"> 수돗물로 헹궈서 넣기</label></div><small>헹구지 않으면 검은 가루로 물이 탁해집니다. 활성탄은 무게(g)로 넣습니다.</small></div>
     </div>
-    <div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><span class="label">투입량 입력 방식</span><div class="seg" data-key="doseMode"><button type="button" id="dm-ml" data-v="ml">넣는 양 (mL)</button><button type="button" id="dm-c" data-v="conc">비커 속 농도 (mg/L)</button></div><small class="hint" id="doseHint"></small></div>
+    </details>
     <div class="armtbl-box"><table class="armtbl" id="armTbl"></table></div>
     <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button type="button" class="btn small" id="armAdd">비커 추가</button><button type="button" class="btn small" id="armReset">기본 비커로 되돌리기</button><span class="hint">비커는 최대 8개입니다. 투입량은 정화 처리일에 들어갑니다.</span></div>
-    <details class="calc" id="calcBox" open>
+    <details class="calc" id="calcBox">
       <summary><h3 style="display:inline">용액 농도 계산기와 만드는 방법</h3></summary>
       <div class="calcgrid">
         <div class="calccard"><h4>① 고체를 녹여 원하는 농도 만들기</h4>
@@ -1086,7 +1087,7 @@ function defaultCfg() {
   return {
     org: 'green', site: 'roof', season: 'fall', vessel: 'v1', shape: 'beaker', capacity: 1000, water: 800, chl0: 100, temp: 22, wind: 1,
     days: 60, wxMode: 'random', weather: makeWeather('random', 90, 11), stages: { treat: 7, judge: 21, plant: 28 },
-    cultureFert: 0.05, oakStrength: 10, strawStrength: 10, oakYield: 10, strawYield: 10, oakMeas: null, strawMeas: null, fertNp: 6, fertP2O5: 10, fertD: 1.2, doseMode: 'ml', rinse: true, removeOn: true, cover: false, refill: true,
+    cultureFert: 0.05, oakStrength: 10, strawStrength: 10, oakYield: 10, strawYield: 10, oakMeas: null, strawMeas: null, fertNp: 6, fertP2O5: 10, fertD: 1.2, doseMode: 'pct', rinse: true, removeOn: true, cover: false, refill: true,
     plant: { on: true, species: 'duckweed', g: 3, transplant: true }, arms: JSON.parse(JSON.stringify(DEF_ARMS)),
     crit: { rel: 50, abs: 20, keep: 7, doMin: 5 }
   };
@@ -1189,7 +1190,7 @@ function fillInputs() {
   $('fN').value = cfg.fertNp; $('fP').value = cfg.fertP2O5; $('fD').value = cfg.fertD;
   var S = stock(); $('oakCsOut').textContent = csTxt(S.oak, S.oakM); $('strawCsOut').textContent = csTxt(S.straw, S.strawM);
   $('fertOut').textContent = '원액 1 mL에 질소 ' + fmt(S.N, 0) + ' mg, 인(P) ' + fmt(S.P, 0) + ' mg';
-  $('doseHint').textContent = cfg.doseMode === 'conc' ? '원하는 비커 속 농도를 넣으면 넣을 mL을 계산합니다.' : '넣을 mL을 넣으면 비커 속 농도를 계산합니다.';
+  $('doseHint').textContent = cfg.doseMode === 'pct' ? '처음 물 양(' + cfg.water + ' mL)에 대한 %입니다. 예: 1% = ' + fmt(cfg.water / 100, 1) + ' mL (활성탄은 ' + fmt(cfg.water / 100, 1) + ' g).' : cfg.doseMode === 'conc' ? '원하는 비커 속 농도를 넣으면 넣을 mL을 계산합니다.' : '넣을 mL을 넣으면 비커 속 농도를 계산합니다.';
   $('temp').value = cfg.temp; $('tempOut').textContent = cfg.temp + ' °C';
   $('cover').checked = cfg.cover; $('refill').checked = cfg.refill;
   $('plantG').value = cfg.plant.g; $('plantUnit').textContent = PLANTS[cfg.plant.species].unit;
@@ -1213,9 +1214,14 @@ function concOf(a, k) { var S = stock(), V = armVolume(a) / 1000; return V > 0 ?
 function mlFor(a, k, Ct) { var S = stock(), Cs = S[DOSE[k].st] * 1000, Vb = armVolume(a) - (a[k] || 0); if (Ct <= 0) return 0; if (Ct >= Cs) return null; return Ct * Vb / (Cs - Ct); }
 function armVolume(a) { return cfg.water + (a.oak || 0) + (a.straw || 0) + (a.fert || 0) + cfg.cultureFert + (a.ac || 0) * 2; }
 function syncDose() {
-  ['oak', 'straw', 'fert'].forEach(function (k) {
-    cfg.arms.forEach(function (a) {
-      if (cfg.doseMode !== 'conc') { a[k + 'C'] = a[k] ? concOf(a, k) : 0; return; }
+  var m = cfg.doseMode;
+  cfg.arms.forEach(function (a) {
+    ['ac', 'oak', 'straw', 'fert'].forEach(function (k) {
+      if (m === 'pct') { if (a[k + 'P'] === undefined) a[k + 'P'] = (a[k] || 0) / cfg.water * 100; a[k] = +(a[k + 'P'] * cfg.water / 100).toFixed(3); }
+      else a[k + 'P'] = (a[k] || 0) / cfg.water * 100;
+    });
+    ['oak', 'straw', 'fert'].forEach(function (k) {
+      if (m !== 'conc') { a[k + 'C'] = a[k] ? concOf(a, k) : 0; return; }
       if (a[k + 'C'] === undefined) a[k + 'C'] = a[k] ? concOf(a, k) : 0;
       var ml = mlFor(a, k, a[k + 'C']); a[k] = ml === null ? a[k] : +ml.toFixed(3);
     });
@@ -1223,17 +1229,20 @@ function syncDose() {
 }
 function buildArmTable() {
   syncDose();
-  var t = $('armTbl'), cm = cfg.doseMode === 'conc';
-  var h = '<thead><tr><th>비커 이름</th><th>활성탄 (g)</th><th>낙엽액 ' + (cm ? '(비커 속 mg/L)' : '(mL)') + '</th><th>볏짚액 ' + (cm ? '(비커 속 mg/L)' : '(mL)') + '</th><th>비료 추가 ' + (cm ? '(비커 속 mg N/L)' : '(mL)') + '</th><th>수생식물</th><th>용량 사용</th><th></th></tr></thead><tbody>';
+  var t = $('armTbl'), m = cfg.doseMode, cm = m === 'conc', pm = m === 'pct';
+  var U = pm ? ['(물의 %)', '(물의 %)', '(물의 %)', '(물의 %)'] : cm ? ['(g)', '(비커 속 mg/L)', '(비커 속 mg/L)', '(비커 속 mg N/L)'] : ['(g)', '(mL)', '(mL)', '(mL)'];
+  var h = '<thead><tr><th>비커 이름</th><th>활성탄 ' + U[0] + '</th><th>낙엽액 ' + U[1] + '</th><th>볏짚액 ' + U[2] + '</th><th>비료 추가 ' + U[3] + '</th><th>수생식물</th><th>용량 사용</th><th></th></tr></thead><tbody>';
   cfg.arms.forEach(function (a, i) {
     var vol = armVolume(a), pct = vol / cfg.capacity * 100;
     function cellIn(k, id, step, max) {
+      var unitAmt = k === 'ac' ? ' g' : ' mL';
+      if (pm) { var p = a[k + 'P'] || 0; return '<input type="number" id="' + id + i + '" min="0" max="50" step="' + (k === 'fert' ? 0.005 : 0.1) + '" value="' + +p.toFixed(k === 'fert' ? 3 : 2) + '" aria-label="' + (DOSE[k] ? DOSE[k].lab : '활성탄') + ' %"><span class="conv">= ' + fmt(a[k] || 0, 2) + unitAmt + ' 넣기</span>'; }
+      if (k === 'ac') return '<input type="number" id="' + id + i + '" min="0" max="100" step="0.5" value="' + (a.ac || 0) + '" aria-label="활성탄 g"><span class="conv">→ ' + fmt((a.ac || 0) / (vol / 1000), 1) + ' g/L</span>';
       if (cm) { var c = a[k + 'C'] !== undefined ? a[k + 'C'] : concOf(a, k); return '<input type="number" id="' + id + i + '" min="0" step="any" value="' + (a[k] ? +fmt(c, k === 'fert' ? 2 : 1) : 0) + '" aria-label="' + DOSE[k].lab + ' 농도"><span class="conv">= ' + fmt(a[k] || 0, 2) + ' mL 넣기</span>'; }
       return '<input type="number" id="' + id + i + '" min="0" max="' + max + '" step="' + step + '" value="' + (a[k] || 0) + '" aria-label="' + DOSE[k].lab + ' mL"><span class="conv">→ ' + fmt(concOf(a, k), k === 'fert' ? 2 : 1) + ' ' + DOSE[k].unit + '</span>';
     }
     h += '<tr><td><span style="display:inline-flex;gap:6px;align-items:center"><span class="sw" style="--sw:' + armColor(i) + '"></span><input type="text" id="an-' + i + '" value="' + esc(a.name) + '" aria-label="비커 이름"></span></td>' +
-      '<td><input type="number" id="aac-' + i + '" min="0" max="100" step="0.5" value="' + (a.ac || 0) + '" aria-label="활성탄 g"><span class="conv">→ ' + fmt((a.ac || 0) / (vol / 1000), 1) + ' g/L</span></td>' +
-      '<td>' + cellIn('oak', 'aoak-', 1, 500) + '</td><td>' + cellIn('straw', 'astr-', 1, 500) + '</td><td>' + cellIn('fert', 'afer-', 0.05, 5) + '</td>' +
+      '<td>' + cellIn('ac', 'aac-', 0.5, 100) + '</td><td>' + cellIn('oak', 'aoak-', 1, 500) + '</td><td>' + cellIn('straw', 'astr-', 1, 500) + '</td><td>' + cellIn('fert', 'afer-', 0.05, 5) + '</td>' +
       '<td><input type="checkbox" id="apl-' + i + '"' + (a.plant ? ' checked' : '') + ' aria-label="수생식물 넣기"></td>' +
       '<td><span class="capbar' + (pct > 100 ? ' over' : '') + '"><i style="width:' + Math.min(100, pct) + '%"></i></span> <span class="num" style="font-size:12px">' + Math.round(vol) + '/' + cfg.capacity + ' mL</span>' + (pct > 100 ? '<span class="why warn">용량을 넘어 넘칩니다</span>' : '') + '</td>' +
       '<td>' + (cfg.arms.length > 1 ? '<button type="button" class="btn small" id="adel-' + i + '">삭제</button>' : '') + '</td></tr>';
@@ -1241,11 +1250,11 @@ function buildArmTable() {
   t.innerHTML = h + '</tbody>';
   cfg.arms.forEach(function (a, i) {
     $('an-' + i).addEventListener('change', function (e) { a.name = e.target.value || ('비커 ' + (i + 1)); changed(); });
-    $('aac-' + i).addEventListener('change', function (e) { a.ac = Math.max(0, +e.target.value || 0); changed(); });
-    [['aoak-', 'oak'], ['astr-', 'straw'], ['afer-', 'fert']].forEach(function (p) { $(p[0] + i).addEventListener('change', function (e) {
-      var v = Math.max(0, +e.target.value || 0);
-      if (cm) { var ml = mlFor(a, p[1], v); if (ml === null) { toast('원액보다 진한 농도는 만들 수 없습니다'); buildArmTable(); return; } a[p[1]] = +ml.toFixed(3); a[p[1] + 'C'] = v; }
-      else a[p[1]] = v;
+    [['aac-', 'ac'], ['aoak-', 'oak'], ['astr-', 'straw'], ['afer-', 'fert']].forEach(function (p) { $(p[0] + i).addEventListener('change', function (e) {
+      var v = Math.max(0, +e.target.value || 0), k = p[1];
+      if (pm) { a[k + 'P'] = v; a[k] = +(v * cfg.water / 100).toFixed(3); delete a[k + 'C']; }
+      else if (cm && k !== 'ac') { var ml = mlFor(a, k, v); if (ml === null) { toast('원액보다 진한 농도는 만들 수 없습니다'); buildArmTable(); return; } a[k] = +ml.toFixed(3); a[k + 'C'] = v; }
+      else a[k] = v;
       changed(); }); });
     $('apl-' + i).addEventListener('change', function (e) { a.plant = e.target.checked; changed(); });
     var d = $('adel-' + i); if (d) d.addEventListener('click', function () { cfg.arms.splice(i, 1); if (!res(ui.sel) || ui.sel === a.id) ui.sel = cfg.arms[0].id; changed(); });
